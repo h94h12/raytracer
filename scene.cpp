@@ -185,7 +185,7 @@ void drawScreen() {
     
         int x, y;
         double u, v; 
-#pragma omp parallel for private(x,y,u,v, point, point1,point2, ray, c, Scene, fov, rat, iph, ipw, uv, rv, imgc, UL, UR, LL, LR, allColors)
+//#pragma omp parallel for private(x,y,u,v, point, point1,point2, ray, c, Scene, fov, rat, iph, ipw, uv, rv, imgc, UL, UR, LL, LR, allColors)
         for (x = 0; x<Scene.width ; x += 1) {
             for (y = 0; y<Scene.height; y += 1) {
                 u = double(x)/Scene.width;
