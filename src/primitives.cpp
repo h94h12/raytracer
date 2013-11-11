@@ -71,7 +71,7 @@ Ray:: Ray(Point startingPoint, Point newPoint) {
 
 
 //Construct a Color
- Color::Color(double red, double green, double blue){
+ Color::Color(int red, int green, int blue){
   
     r = red;
     g = green;
