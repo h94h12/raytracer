@@ -91,7 +91,7 @@ public:
  class Color{
      public:
         Color() {};
-        Color(double, double, double);
+     Color(double, double, double);
         
         double r, g, b;
         
