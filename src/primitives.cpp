@@ -8,7 +8,7 @@
 #include <time.h>
 #include <math.h>
 #include "primitives.h"
-#include "nmintrin.h"
+#include "nmmintrin.h"
 
 
 //Constructor
