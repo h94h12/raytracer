@@ -92,7 +92,7 @@ public:
      public:
         Color() {};
      Color(double, double, double);
-        
+        _m128d vect;
         double r, g, b;
         
         Color operator + (Color);  

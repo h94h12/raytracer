@@ -72,7 +72,7 @@ Ray:: Ray(Point startingPoint, Point newPoint) {
 
 //Construct a Color
  Color::Color(double red, double green, double blue){
-  
+    vect = _mm128_set_pd(red, green, blue, 0.0); 
     r = red;
     g = green;
     b = blue;
