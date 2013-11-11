@@ -91,8 +91,13 @@ public:
  class Color{
      public:
         Color() {};
+<<<<<<< HEAD
      Color(double, double, double);
         _m128d vect;
+=======
+        Color(double, double, double);
+        
+>>>>>>> parent of b3a0458... Can't change double to int, value is 0-1
         double r, g, b;
         
         Color operator + (Color);  

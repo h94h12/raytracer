@@ -72,8 +72,13 @@ Ray:: Ray(Point startingPoint, Point newPoint) {
 
 
 //Construct a Color
+<<<<<<< HEAD
  Color::Color(double red, double green, double blue){
     vect = _mm128_set_pd(red, green, blue, 0.0); 
+=======
+ Color::Color(int red, int green, int blue){
+  
+>>>>>>> parent of b3a0458... Can't change double to int, value is 0-1
     r = red;
     g = green;
     b = blue;
