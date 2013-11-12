@@ -326,7 +326,7 @@ BoundingBox ShapeList::getRootBox(){
 }
 
 bool BoundingBox::intersect(Ray r){ 
-    float xmin, xmax, ymin, ymax, zmin, zmax; 
+    float xmin = 0, xmax = 0, ymin = 0, ymax = 0, zmin = 0, zmax = 0; 
     float xd = r.direction.dx;
     if (xd == 0) xd = 0.00001;
     
@@ -358,21 +358,29 @@ bool BoundingBox::intersect(Ray r){
         
     }
    
-   
-   float a_z = 1 / zd;
-    if(a_x >= 0){
+    if((xmin > ymax) || (ymin > xmax))
+        return false;
+    if(ymin > xmin)
+        xmin = ymin;
+    if(ymax < xmax)
+        xmax = ymax;
+      
+    float a_z = 1 / zd;
+    if(a_z >= 0){
         zmin = a_z * (min_z - r.origin.z);
         zmax = a_z * (max_z - r.origin.z); 
     }
     else{
         zmin = a_z * (max_z - r.origin.z);
         zmax = a_z * (min_z - r.origin.z); 
-        
     }
-    
-    if((xmin > ymax) || (xmin > zmax) || (ymin > xmax) || (ymin > zmax) || (zmin > xmax) || (zmin > ymax))
+    if((xmin > zmax) || (zmin > xmax))
         return false;
-    return true; 
+    if(zmin > xmin)
+        xmin = zmin;
+    if(zmax < xmax)
+        xmax = zmax; 
+    return (xmax > 0); 
    
    
 }
@@ -410,22 +418,42 @@ AABB_Node::AABB_Node(ShapeList sl, int depth){
     }
     
 }
-
-bool AABB_Node::CollisionTest(Ray ray, Point* p, Shape*& sh){
-    if(!bb.intersect(ray)){
+//simpler test, don't need to know where ray intersects with shapes
+bool AABB_Node::CollisionTest(Ray ray, float limit){
+     if(!bb.intersect(ray)){
         return false; 
     }
 
         if(children[0]){
-            if(children[0]->CollisionTest(ray, p, sh))
+            if(children[0]->CollisionTest(ray, limit))
                 return true;
-            if(children[1]->CollisionTest(ray, p, sh))
+            if(children[1]->CollisionTest(ray, limit))
                 return true; 
             return false; 
         
         }
         //do intersection with shapes at this node 
-        return containedShapes.checkIntersect(ray, p, sh, LARGE_NUM); 
+        return containedShapes.checkIntersect(ray, limit); 
+    
+    return false; 
+    
+}
+
+bool AABB_Node::CollisionTest(Ray ray, Point* p, Shape*& sh, float limit){
+    if(!bb.intersect(ray)){
+        return false; 
+    }
+
+        if(children[0]){
+            if(children[0]->CollisionTest(ray, p, sh, limit))
+                return true;
+            if(children[1]->CollisionTest(ray, p, sh, limit))
+                return true; 
+            return false; 
+        
+        }
+        //do intersection with shapes at this node 
+        return containedShapes.checkIntersect(ray, p, sh, limit); 
     
     return false; 
 }

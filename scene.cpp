@@ -72,6 +72,7 @@ vector<vector<Color> > imageBuffer;
 double cosval = 0;
 bool flagDrawToScreen = false;
 bool flagDrawToFile = false;
+bool flagAABB = false; 
 
 //****************************************************
 // reshape viewport if the window is resized
@@ -92,6 +93,64 @@ void myKeyboardFunc(unsigned char key, int x, int y){
 
     exit(0);
 }
+
+Color AABBtrace(Ray ray, int depth, Color baseColor){
+    if (depth > Scene.reflectiondepth){
+        return Color(0, 0, 0);
+    }
+
+
+    Point inter = Point(0, 0, 0);  //ray from camera intersects a shape at this point
+    Shape* intershape = NULL; //which shape is intersected. note you can't instantiate abstract class
+    //if(!Scene.shapes.checkIntersect(ray, &inter, intershape, LARGE_NUM)) //camera ray hits nothing, return background
+    if(!Scene.root.CollisionTest(ray, &inter, intershape, LARGE_NUM))
+        return Color(0, 0, 0);   
+          
+    BRDF brdf = intershape->brdf; 
+    Vector N = intershape->getNormal(inter); 
+    for(int i = 0; i < Scene.lights.size(); i++){
+        Ray lightray, L;
+        if(Scene.lights[i].directional) {
+            lightray = Ray(inter, Vector(Point(0,0,0), Scene.lights[i].source).normalize()); 
+            
+        } else {
+            lightray = Ray(inter, Vector(inter, Scene.lights[i].source).normalize());
+             
+		}
+		
+		double dist = sqrt(pow(Scene.lights[i].source.x - inter.x, 2) + 
+						pow(Scene.lights[i].source.y - inter.y, 2) + 
+						pow(Scene.lights[i].source.z - inter.z, 2));
+		
+		
+        Point bias = inter + lightray.direction * 0.001; //take into account shadow bias
+        L = Ray(bias, lightray.direction); 
+        //if(!Scene.shapes.checkIntersect(L, dist)){ //light ray for this light is not blocked by any shapes. 
+         if(!Scene.root.CollisionTest(L, dist)){
+            Vector R = getReflection(L.direction, N); 
+            baseColor += brdf.kd * Scene.lights[i].color * max(0.0, L.direction.dotProduct(N)); 
+            baseColor += brdf.ks * Scene.lights[i].color * pow(max(0.0, R.dotProduct(Vector(inter, ray.origin).normalize())), brdf.sp); 
+        } 
+    }
+    
+    
+    baseColor += brdf.ke; // the emission of this object
+
+    baseColor += Scene.ambient; // the overal ambient glow of the scene.
+    
+
+    //if (brdf.kr > 0){
+    if (brdf.ks.r > 0 || brdf.ks.g > 0 || brdf.ks.b > 0){
+		Vector reflectDir = getReflection(ray.direction, N).negative();
+		Ray reflectedRay = Ray(inter + reflectDir * 0.1, reflectDir); //bias
+		baseColor += AABBtrace(reflectedRay, depth + 1, baseColor) * brdf.ks; 
+    }
+    
+    return baseColor; 
+    
+}
+
+
 
 Color trace(Ray ray, int depth, Color baseColor){
     if (depth > Scene.reflectiondepth){
@@ -124,7 +183,6 @@ Color trace(Ray ray, int depth, Color baseColor){
         Point bias = inter + lightray.direction * 0.001; //take into account shadow bias
         L = Ray(bias, lightray.direction); 
         if(!Scene.shapes.checkIntersect(L, dist)){ //light ray for this light is not blocked by any shapes. 
-
             Vector R = getReflection(L.direction, N); 
             baseColor += brdf.kd * Scene.lights[i].color * max(0.0, L.direction.dotProduct(N)); 
             baseColor += brdf.ks * Scene.lights[i].color * pow(max(0.0, R.dotProduct(Vector(inter, ray.origin).normalize())), brdf.sp); 
@@ -158,7 +216,7 @@ void drawScreen() {
     
     
     Vector right_dir = up_dir.crossProduct(look_vector);
-    right_dir = right_dir.normalize();
+    right_dir = right_dir.normalize(); 
 
     up_dir = right_dir.crossProduct(look_vector);
     
@@ -185,7 +243,7 @@ void drawScreen() {
     
         int x, y;
         double u, v; 
-#pragma omp parallel for private(x,y,u,v, point, point1,point2, ray, c, Scene, fov, rat, iph, ipw, uv, rv, imgc, UL, UR, LL, LR, allColors)
+#pragma omp parallel for private(x,y,u,v, point, point1, point2, ray, c)
         for (x = 0; x<Scene.width ; x += 1) {
             for (y = 0; y<Scene.height; y += 1) {
                 u = double(x)/Scene.width;
@@ -201,7 +259,8 @@ void drawScreen() {
                 ray = Ray(Scene.lookfrom, point);
                 ray.direction = ray.direction.normalize();
     
-                Color c = trace(ray, 0, Color(0, 0, 0)); 
+                if(!flagAABB) c = trace(ray, 0, Color(0, 0, 0)); 
+                else c = AABBtrace(ray, 0, Color(0, 0, 0)); 
                 imageBuffer[x][y] = c.clone();
                 
         //some printing to keep track of progress                 
@@ -265,6 +324,9 @@ int main(int argc, char *argv[]) {
 					} else if (!std::string(argv[c]).compare("-file")) {
 						flagDrawToFile = true;
 					}
+                    if (!std::string(argv[c]).compare("-AABB")) {
+						flagAABB = true;
+					}
 					c++;
 				}
 			} else {
@@ -276,6 +338,10 @@ int main(int argc, char *argv[]) {
 		
 		if (flagDrawToScreen)
 			cout << " ---Writing to screen" << endl;
+        if (flagAABB)
+            cout << " ---Using AABB" << endl;
+        else
+            cout << " ---NOT using AABB" << endl;
 		
 		imageBuffer = vector<vector<Color> >(Scene.width, vector<Color>(Scene.height, Color(0,0,0)));
 	        double time = 0.0;

@@ -27,6 +27,8 @@ class parsedScene{
         
         ShapeList shapes;
         vector<Light> lights;
+        
+          AABB_Node root; 
     
     parsedScene(); 
     

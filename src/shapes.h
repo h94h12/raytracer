@@ -71,8 +71,10 @@ class AABB_Node{
         AABB_Node* children[2];  
         ShapeList containedShapes; 
         
+        AABB_Node(){}; 
         AABB_Node(ShapeList, int); 
-        bool CollisionTest(Ray, Point*, Shape*&); 
+        bool CollisionTest(Ray, Point*, Shape*&, float); 
+         bool CollisionTest(Ray, float); 
 };
 
 

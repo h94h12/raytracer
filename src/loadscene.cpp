@@ -326,7 +326,7 @@ parsedScene loadScene(std::string file) {
         S.aaDepth = atof(splitline[1].c_str());
         S.aaJitter = atof(splitline[2].c_str());
         
-        cout << " ---Anti-aliasing flag turned on:" << endl;
+        //cout << " ---Anti-aliasing flag turned on:" << endl;
 						
         // Update current properties
       } else {
@@ -338,7 +338,7 @@ parsedScene loadScene(std::string file) {
     
 
     //cout << "light x" << S.lights[0].x << ", " <<  S.lights[1].x << endl;
-    
+     S.root = AABB_Node(S.shapes, 0); //sort shapes into AABB tree
     return S;
   }
   throw 5;
